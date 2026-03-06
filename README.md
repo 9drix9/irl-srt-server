@@ -95,15 +95,19 @@ srt://server:8890?streamid=publish:live/mystreamkey
 
 ## Usage with MediaMTX
 
-Configure MediaMTX to pull from irl-srt-server:
+Configure MediaMTX to bridge SRT streams on-demand using ffmpeg. This approach allows both direct RTMP publishers and SRT-to-RTMP bridging on the same paths:
 
 ```yaml
 paths:
   "~^live/(.+)$":
-    source: "srt://localhost:4000?streamid=play/live/$G1&mode=caller"
-    sourceOnDemand: true
-    sourceOnDemandCloseAfter: 30s
+    runOnDemand: 'ffmpeg -nostdin -i "srt://127.0.0.1:4000?streamid=play/$MTX_PATH&mode=caller&timeout=5000000" -c copy -f flv "rtmp://127.0.0.1:1935/$MTX_PATH"'
+    runOnDemandRestart: yes
+    runOnDemandCloseAfter: 30s
+    runOnDemandStartTimeout: 30s
+    overridePublisher: yes
 ```
+
+> **Note**: Requires the `bluenviron/mediamtx:latest-ffmpeg` Docker image (includes ffmpeg for `runOnDemand`).
 
 ## Usage with srtla-relay
 
